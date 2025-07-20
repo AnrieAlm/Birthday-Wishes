@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raccoon Maze RPG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+           font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 75%, #475569 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        body.celebrating {
+            animation: rainbow-bg 3s ease infinite;
+        }
+
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 10px;
+           background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 8px rgba(251, 191, 36, 0.3);
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+
+        .status-bar {
+         background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .character-info {
+            text-align: left;
+        }
+
+        .inventory {
+            text-align: right;
+        }
+
+        .happiness-meter {
+            margin-top: 10px;
+        }
+
+        .happiness-bar {
+              width: 100%;
+            height: 20px;
+            background: linear-gradient(90deg, #1e293b, #334155);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            margin-top: 0.5rem;
+        }
+
+        .happiness-fill {
+           height: 100%;
+            background: linear-gradient(90deg, #ef4444 0%, #f97316 25%, #eab308 50%, #84cc16 75%, #10b981 100%);
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .scene {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.4));
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 32px;
+            margin: 24px 0;
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.4),
+                0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .character {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .character-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+           border: 3px solid rgba(251, 191, 36, 0.8);
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+            box-shadow: 
+                0 10px 25px rgba(59, 130, 246, 0.3),
+                0 0 0 1px rgba(251, 191, 36, 0.2);
+        }
+
+        .character-name {
+             font-size: 1.8em;
+            color: #fbbf24;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .character-description {
+           font-style: italic;
+            color: #94a3b8;
+            margin-bottom: 15px;
+            font-weight: 300;
+        }
+
+        .riddle-container {
+           background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.6));
+            padding: 24px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .riddle {
+             font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            padding: 16px;
+            border-radius: 8px;
+            color: #10b981;
+            margin: 10px 0;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .answer-input {
+               width: 100%;
+            padding: 14px 16px;
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            border-radius: 8px;
+            font-size: 1.1em;
+            margin: 12px 0;
+            background: rgba(248, 250, 252, 0.95);
+            color: #1e293b;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+         .answer-input:focus {
+            outline: none;
+            border-color: #fbbf24;
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+            background: rgba(248, 250, 252, 1);
+        }
+
+        .btn {
+           background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 10px;
+            box-shadow: 
+                0 4px 14px rgba(249, 115, 22, 0.4),
+                0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.025em;
+        }
+
+        .btn:hover {
+             transform: translateY(-2px) scale(1.02);
+            box-shadow: 
+                0 8px 25px rgba(249, 115, 22, 0.5),
+                0 4px 8px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success {
+       color: #10b981;
+            font-weight: 600;
+            animation: glow 1s ease-in-out;
+        }
+
+        .error {
+           color: #ef4444;
+            font-weight: 600;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; text-shadow: 0 0 20px #10b981; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .food-item {
+            display: inline-block;
+            background: rgba(255,215,0,0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin: 2px;
+            border: 1px solid #ffd700;
+            font-size: 0.9em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .final-scene {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .raccoon {
+            font-size: 8em;
+            margin: 20px 0;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
+        }
+
+        .heart-animation {
+            font-size: 6em;
+            color: #ff69b4;
+            animation: heartbeat 1.5s infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .celebration-text {
+            background: linear-gradient(45deg, #ec4899, #fbbf24, #10b981, #3b82f6);
+            background-size: 400% 400%;
+            animation: rainbow 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .progress-indicator {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.1em;
+            color: #c8e6c9;
+        }
+
+        @media (max-width: 768px) {
+            .title { font-size: 2em; }
+            .status-bar { grid-template-columns: 1fr; gap: 10px; }
+            .inventory { text-align: left; }
+        }
+
+        .celebration-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 192, 203, 0.3);
+    padding: 30px;
+    border-radius: 20px;
+    margin-top: 30px;
+    box-shadow: 0 8px 30px rgba(255, 105, 180, 0.2);
+    backdrop-filter: blur(10px);
+    animation: glowCelebrate 2s ease-in-out infinite alternate;
+}
+
+@keyframes glowCelebrate {
+    from {
+        box-shadow: 0 0 10px rgba(255, 105, 180, 0.2);
+    }
+    to {
+        box-shadow: 0 0 30px rgba(255, 105, 180, 0.4);
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="title">🏫 Welcome to Griffith Maze 🏫</h1>
+        <p class="subtitle">Your adventure awaits you!</p>
+        
+        <div class="status-bar">
+            <div class="character-info">
+                <strong>👱🏻‍♂
+ Boris</strong> <br>
+                <span class="progress-indicator" id="progress">Character 1 of 10</span>
+            </div>
+            <div class="inventory">
+                <strong>🍽️ Food Collected:</strong>
+                <div id="inventory"></div>
+                <div class="happiness-meter">
+                    <div>🦝 Raccoon Happiness:</div>
+                    <div class="happiness-bar">
+                        <div class="happiness-fill" id="happinessFill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Scene -->
+        <div class="scene" id="start">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 4em; margin-bottom: 15px;">🌲🌲🌳🌲🌲</div>
+                <div class="character-name" style="font-size: 2.2em; margin-bottom: 20px;">The Misty Forest</div>
+            </div>
+            
+            <div style="background: rgba(0,0,0,0.3); padding: 25px; border-radius: 10px; margin: 20px 0; font-size: 1.1em; line-height: 1.6;">
+                <p style="margin-bottom: 15px;">You awaken in a misty forest. Before you stands a <strong>sad raccoon</strong>, its tiny paws clutching its empty stomach.</p>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <div style="font-size: 3em; margin: 10px 0; animation: bounce 2s infinite;">🦝</div>
+                </div>
+                
+                <div style="font-style: italic; text-align: center; color: #c8e6c9; font-size: 1.2em; margin: 20px 0;">
+                     "Boris," it says. "I'm hungry. Gimme food 😭
+
+"
+                </div>
+                
+                <p style="margin-top: 20px; color: #e8f5e8;">Your friends are scattered throughout the maze ahead, each with riddles that will reward you with food items. Can you collect enough food to make the raccoon happy?</p>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="startGame()">🚀 Begin the Maze</button>
+            </div>
+        </div>
+
+        <!-- Character Scenes -->
+        <div class="scene hidden" id="mariella">
+            <div class="character">
+                <div class="character-avatar">👩‍🦰</div>
+                <div class="character-name">Mariella</div>
+                <div class="character-description">Boris! </div>
+                <p>"Solve my riddle and I'll give you some delicious Gino's ice cream! 🍦"</p>
+            </div>
+            <div class="riddle-container">
+                <div class="riddle">print("toffeetwists"[::-1])</div>
+                <input type="text" class="answer-input" id="mariellaAnswer" placeholder="Enter your answer...">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkAnswer('mariella', 'stsiwteeffot', 'Gino\'s ice cream', '🍦')">Submit Answer</button>
+                </div>
+                <div id="mariellaFeedback"></div>
+            </div>
+        </div>
+
+        <div class="scene hidden" id="esgi">
+            <div class="character">
+                <div class="character-avatar">🙋🏻‍♀</div>
+                <div class="character-name">Esgi</div>
+                <div class="character-description">Hey Boris!</div>
+                <p>"This challenge will earn you some Turkish delight! 🍬 yay deal 🙌🏻🙌🏻🫂🫂❤❤
+"</p>
+            </div>
+            <div class="riddle-container">
+                <div class="riddle">print(sum([ord(c) for c in "Bober"]))</div>
+                <input type="text" class="answer-input" id="esgiAnswer" placeholder="Enter your answer...">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkAnswer('esgi', '490', 'Turkish delight', '🍬')">Submit Answer</button>
+                </div>
+                <div id="esgiFeedback"></div>
+            </div>
+        </div>
+
+        <div class="scene hidden" id="darren">
+            <div class="character">
+                <div class="character-avatar">👨‍🦲</div>
+                <div class="character-name">Darren</div>
+                <div class="character-description">🤘🏼 Yalla! </div>
+                <p>"Only curry lovers can solve this puzzle! 🍛"</p>
+            </div>
+            <div class="riddle-container">
+                <div class="riddle">print("notMyMonkey".capitalize() + "_notMyCircus")</div>
+                <input type="text" class="answer-input" id="darrenAnswer" placeholder="Enter your answer...">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkAnswer('darren', 'NotMyMonkey_notMyCircus', 'Curry', '🍛')">Submit Answer</button>
+                </div>
+                <div id="darrenFeedback"></div>
+            </div>
+        </div>
+
+        <div class="scene hidden" id="victor">
+            <div class="character">
+                <div class="character-avatar">👨🏿</div>
+                <div class="character-name">Victor</div>
+                <div class="character-description">OMG OMG</div>
+                <p>"Boris I need help I am not a computer student do my SEWA project for me 🙏 OMG OMG"</p>
+            </div>
+            <div class="riddle-container">
+                <div>Which HTML tag makes text bold?</div>
+                <input type="text" class="answer-input" id="victorAnswer" placeholder="Enter the tag name...">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkAnswer('victor', 'b', 'Prayer', '🙏')">Submit Answer</button>
+                </div>
+                <div id="victorFeedback"></div>
+            </div>
+        </div>
+
+        <div class="scene hidden" id="sharad">
+    <div class="character">
+        <div class="character-avatar">🧔🏽‍♂️</div>
+        <div class="character-name">Sharad</div>
+        <div class="character-description">Ey Yo Bro!</div>
+        <p>"Wassup??? and I’ll give you a Burger 🍔"</p>
+    </div>
+    <div class="riddle-container">
+        <div class="riddle">What is the output of:<br><code>print((2**3) * (5 + 1))</code></div>
+        <input type="text" class="answer-input" id="sharadAnswer" placeholder="Enter your answer...">
+        <div style="text-align: center;">
+            <button class="btn" onclick="checkAnswer('sharad', '48', 'Burger', '🍔')">Submit Answer</button>
+        </div>
+        <div id="sharadFeedback"></div>
+    </div>
+</div>
+
+        <div class="scene hidden" id="hope">
+            <div class="character">
+                <div class="character-avatar">💁🏿‍♀</div>
+                <div class="character-name">Hope</div>
+                <div class="character-description">Boris I broke my laptop. Please help me!</div>
+                <p>"Do my assignment and I'll give you hope itself. ✨ slayyyyyyy"</p>
+            </div>
+            <div class="riddle-container">
+                <div>What symbol starts a PHP variable?</div>
+                <input type="text" class="answer-input" id="hopeAnswer" placeholder="Enter the symbol...">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkAnswer('hope', '$', 'Hope', '✨')">Submit Answer</button>
+                </div>
+                <div id="hopeFeedback"></div>
+            </div>
+        </div>
+
+        <div class="scene hidden" id="tracey">
+            <div class="character">
+                <div class="character-avatar">👩‍🦳</div>
+                <div class="character-name">Tracey</div>
+                <div class="character-description">You meet **Tracey** I have some questions for you.... Smiles!</div>
+                <p>"Test your OOP knowledge! I can only offer you a big smile, no food. 😊"</p>
+            </div>
+            <div class="riddle-container">
+                <div>In OOP, a Java _______ class is a class that can have only one object (an instance of the class) at a time?</div>
+                <input type="text" class="answer-input" id="traceyAnswer" placeholder="Enter your answer...">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkAnswer('tracey', 'singleton', 'A Big Smile', '😊')">Submit Answer</button>
+                </div>
+                <div id="traceyFeedback"></div>
+            </div>
+        </div>
+
+        <div class="scene hidden" id="savas">
+            <div class="character">
+                <div class="character-avatar">🦼</div>
+                <div class="character-name">Savas</div>
+                <div class="character-description">Hello Guys .... rolls into the scene like a boss 😎</div>
+                <p>"Only the worthy can earn my delicious shawarma! 🥙"</p>
+            </div>
+            <div class="riddle-container">
+                <div class="riddle">print("swans".count("a"))</div>
+                <input type="text" class="answer-input" id="savasAnswer" placeholder="Enter your answer...">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkAnswer('savas', '2', 'Shawarma', '🥙')">Submit Answer</button>
+                </div>
+                <div id="savasFeedback"></div>
+            </div>
+        </div>
+
+        <div class="scene hidden" id="daniel">
+            <div class="character">
+                <div class="character-avatar">🏃</div>
+                <div class="character-name">Daniel</div>
+                <div class="character-description">Davay lets go for a run and discuss the job market</div>
+                <p>"Come to with me to the park I will give you some pelmeni! 🥟"</p>
+            </div>
+            <div class="riddle-container">
+                <div class="riddle">print("Lidl".lower().replace("i", "4"))</div>
+                <input type="text" class="answer-input" id="danielAnswer" placeholder="Enter your answer...">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkAnswer('daniel', 'L4dl', 'Pelmeni', '🥟')">Submit Answer</button>
+                </div>
+                <div id="danielFeedback"></div>
+            </div>
+        </div>
+
+        <div class="scene hidden" id="grace">
+            <div class="character">
+                <div class="character-avatar">👩🏻‍🎨</div>
+                <div class="character-name">Grace</div>
+                <div class="character-description">Lets discuss politics</div>
+                <p>"Final challenge! Answer correctly I'll give you wine! 🍷"</p>
+            </div>
+            <div class="riddle-container">
+                <div class="riddle">print("logic"[::-2])</div>
+                <input type="text" class="answer-input" id="graceAnswer" placeholder="Enter your answer...">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkAnswer('grace', 'cil', 'Wine', '🍷')">Submit Answer</button>
+                </div>
+                <div id="graceFeedback"></div>
+            </div>
+        </div>
+
+        <!-- Final Scene -->
+        <div class="scene hidden" id="raccoon">
+            <div class="final-scene">
+                <div class="raccoon">🦝</div>
+                <div class="character-name">The Hungry Raccoon</div>
+                <div id="raccoonMessage">
+                    <p>You approach the raccoon at the end of the maze...</p>
+                </div>
+              <div id="raccoonReward" class="hidden">
+    <div class="celebration-card">
+        <div class="heart-animation">❤️</div>
+        <h2 class="celebration-text">Happy Birthday, Boris! 🎉<br> From your favorite Yenot ❤️❤️❤️❤️❤️❤️ </h2>
+        <p style="margin-top: 15px;">Have a wonderful year!</p>
+        
+    </div>
+</div>
+
+            
+            
+                </div>
+        </div>
+        
+    </div>
+
+    <script>
+        let gameState = {
+            currentCharacter: 0,
+            inventory: [],
+            happinessLevel: 0,
+            characters: ['mariella', 'esgi', 'darren', 'victor','sharad', 'hope', 'tracey', 'savas', 'daniel', 'grace'],
+            foodItems: ['Gino\'s ice cream', 'Turkish delight', 'Curry', 'Burger' ,'Shawarma', 'Pelmeni', 'Wine'],
+            completedCharacters: []
+        };
+
+        function startGame() {
+            document.getElementById('start').classList.add('hidden');
+            showCharacter(0);
+        }
+
+        function showCharacter(index) {
+            // Hide all scenes
+            document.querySelectorAll('.scene').forEach(scene => scene.classList.add('hidden'));
+            
+            if (index < gameState.characters.length) {
+                document.getElementById(gameState.characters[index]).classList.remove('hidden');
+                updateProgress(index + 1);
+            } else {
+                showFinalScene();
+            }
+        }
+
+        function updateProgress(current) {
+            document.getElementById('progress').textContent = `Character ${current} of ${gameState.characters.length}`;
+        }
+
+        function updateInventory() {
+            const inventoryDiv = document.getElementById('inventory');
+            if (gameState.inventory.length === 0) {
+                inventoryDiv.innerHTML = '<span style="opacity: 0.7;">No food items yet</span>';
+            } else {
+                inventoryDiv.innerHTML = gameState.inventory.map(item => 
+                    `<span class="food-item">${item}</span>`
+                ).join('');
+            }
+        }
+
+        function updateHappiness() {
+            const fillElement = document.getElementById('happinessFill');
+            const percentage = (gameState.happinessLevel / 7) * 100; // 6 food items total
+            fillElement.style.width = percentage + '%';
+        }
+
+        function checkAnswer(character, correctAnswer, reward, emoji) {
+            const input = document.getElementById(character + 'Answer');
+            const feedback = document.getElementById(character + 'Feedback');
+            const userAnswer = input.value.trim().toLowerCase();
+            const correct = correctAnswer.toLowerCase();
+
+            if (userAnswer === correct) {
+                feedback.innerHTML = `<div class="success">✅ Correct! You received: ${reward} ${emoji}</div>`;
+                
+                // Add food item to inventory if it's actually food
+                if (gameState.foodItems.includes(reward)) {
+                    gameState.inventory.push(reward);
+                    gameState.happinessLevel++;
+                    updateInventory();
+                    updateHappiness();
+                }
+                
+                gameState.completedCharacters.push(character);
+                
+                // Add continue button
+                setTimeout(() => {
+                    feedback.innerHTML += '<div style="text-align: center; margin-top: 15px;"><button class="btn" onclick="continueGame()">Continue Journey ➡️</button></div>';
+                }, 1000);
+                
+            } else {
+                feedback.innerHTML = `<div class="error">❌ Try again! Hint: Think about what the code would output.</div>`;
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function continueGame() {
+            gameState.currentCharacter++;
+            showCharacter(gameState.currentCharacter);
+        }
+
+        function showFinalScene() {
+            document.getElementById('raccoon').classList.remove('hidden');
+            
+            setTimeout(() => {
+                const message = document.getElementById('raccoonMessage');
+                const reward = document.getElementById('raccoonReward');
+                
+                if (gameState.happinessLevel >= 6) { // At least 5 out of 6 food items
+                    message.innerHTML = `
+                        <p>The raccoon's eyes light up as you approach with your collection of food!</p>
+                        <div style="margin: 20px 0;">
+                            <strong>You feed the raccoon:</strong><br>
+                            ${gameState.inventory.map(item => `• ${item}`).join('<br>')}
+                        </div>
+                        <p>The raccoon devours the food happily and jumps with joy! 🎉</p>
+                    `;
+                    
+                    setTimeout(() => {
+                        reward.classList.remove('hidden');
+                        document.body.classList.add('celebrating');
+                    }, 2000);
+                } else {
+                    message.innerHTML = `
+                        <p>The raccoon is still quite hungry. You only collected ${gameState.inventory.length} food items.</p>
+                        <p>The raccoon appreciates your effort but needs more food to be truly happy.</p>
+                        <div style="margin-top: 20px;">
+                            <button class="btn" onclick="location.reload()">Try Again 🔄</button>
+                        </div>
+                    `;
+                }
+            }, 1500);
+        }
+
+        // Initialize the game
+        updateInventory();
+        updateHappiness();
+        
+        // Add enter key support for inputs
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const activeInput = document.activeElement;
+                if (activeInput.classList.contains('answer-input')) {
+                    const character = activeInput.id.replace('Answer', '');
+                    const button = activeInput.nextElementSibling.querySelector('button');
+                    if (button) button.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
